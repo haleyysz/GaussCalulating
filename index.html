@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8" />
+		<title>高斯正反算</title>
+		<link rel="shortcut icon" type="image/x-icon" href="img/math.ico" media="screen" />
+		<!--浏览器小图标-->
+		<link rel="Bookmark" href="img/math.ico" />
+		<!--收藏夹显示图标-->
+		<link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+		<script src="http://cdn.static.runoob.com/libs/jquery/2.1.1/jquery.min.js"></script>
+		<script src="http://cdn.static.runoob.com/libs/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		<style type="text/css">
+			body {
+				margin-top: 2%;
+				min-height: 600px;
+				max-width: 800px;
+				margin-left: auto;
+				margin-right: auto;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div class="panel panel-default">
+			<div class="panel-body">
+				<h2>高斯正算<h5 class="text-info">根据输入的X,Y坐标和带宽得到相应的经纬度</h5></h2>
+			</div>
+			<div class="panel-footer">
+				<div class="input-group input-group-lg">
+					<span class="input-group-addon"><span class="glyphicon glyphicon-pushpin"></span></span>
+					<input id="X" type="text" class="form-control" placeholder="请输入X坐标(单位: 0.001m)">
+					<input id="Y" type="text" class="form-control" placeholder="请输入Y坐标(单位: 0.001m)">
+					<input id="dai1" type="text" class="form-control" placeholder="请输入带宽(eg. 6)">
+					<span class="input-group-addon"><button class="btn btn-primary btn-lg pull-right" onclick="GaussProjCalZheng()" role="button">计算经纬度</button></span>
+				</div>
+			</div>
+		</div>
+
+		<div class="panel panel-default">
+			<div class="panel-body">
+				<h2>高斯反算<h5 class="text-info">根据输入的经纬度和带宽得到相应的X,Y坐标</h5></h2>
+			</div>
+			<div class="panel-footer">
+				<div class="input-group input-group-lg">
+					<span class="input-group-addon"><span class="glyphicon glyphicon-pushpin"></span></span>
+					<input id="long" type="text" class="form-control" placeholder="请输入经度(eg. 丽江的经度 = 26.8550)">
+					<input id="lat" type="text" class="form-control" placeholder="请输入纬度(eg. 丽江的纬度 = 100.2277)">
+					<input id="dai2" type="text" class="form-control" placeholder="请输入带宽(eg. 6)">
+					<span class="input-group-addon"> <button class="btn btn-primary btn-lg pull-right" onclick="GaussProjCalFan()" role="button">计算坐标</button></span>
+				</div>
+			</div>
+		</div>
+		<div class="alert alert-warning" role="alert">提示: 此计算为6度带（含）带号表示方法</div>
+	</body>
+	<script>
+		////高斯正算
+		function GaussProjCalZheng() {
+			var X = document.getElementById("X").value; //int
+			var Y = document.getElementById("Y").value; //int
+			var Dai = document.getElementById("dai1").value; //int
+			if(X == null || X == 0 || Y == null || Y == 0 || Dai == null || Dai == 0) {
+				alert("请输入坐标和带宽!");
+			} else {
+				var longitude;
+				var latitude;
+				var ProjNo;
+				var ZoneWide; ////带宽   
+				var longitude1, latitude1, longitude0, latitude0, X0, Y0, xval, yval;
+				var e1, e2, f, a, ee, NN, T, C, M, D, R, u, fai, iPI;
+				iPI = 0.0174532925199433; ////3.1415926535898/180.0;   
+				a = 6378245.0;
+				f = 1.0 / 298.3; //54年北京坐标系参数   
+				////a=6378140.0; f=1/298.257; //80年西安坐标系参数   
+				ZoneWide = Dai; ////6度带宽   
+				ProjNo = parseInt(X / 1000000); //查找带号  
+				longitude0 = (ProjNo - 1) * ZoneWide + ZoneWide / 2;
+				longitude0 = longitude0 * iPI; //中央经线  
+				X0 = ProjNo * 1000000 + 500000;
+				Y0 = 0;
+				xval = X - X0;
+				yval = Y - Y0; //带内大地坐标  
+				e2 = 2 * f - f * f;
+				e1 = (1.0 - Math.sqrt(1 - e2)) / (1.0 + Math.sqrt(1 - e2));
+				ee = e2 / (1 - e2);
+				M = yval;
+				u = M / (a * (1 - e2 / 4 - 3 * e2 * e2 / 64 - 5 * e2 * e2 * e2 / 256));
+				fai = u + (3 * e1 / 2 - 27 * e1 * e1 * e1 / 32) * Math.sin(2 * u) + (21 * e1 * e1 / 16 - 55 * e1 * e1 * e1 * e1 / 32) * Math.sin(4 * u) + (151 * e1 * e1 * e1 / 96) * Math.sin(6 * u) + (1097 * e1 * e1 * e1 * e1 / 512) * Math.sin(8 * u);
+				C = ee * Math.cos(fai) * Math.cos(fai);
+				T = Math.tan(fai) * Math.tan(fai);
+				NN = a / Math.sqrt(1.0 - e2 * Math.sin(fai) * Math.sin(fai));
+				R = a * (1 - e2) / Math.sqrt((1 - e2 * Math.sin(fai) * Math.sin(fai)) * (1 - e2 * Math.sin(fai) * Math.sin(fai)) * (1 - e2 * Math.sin(fai) * Math.sin(fai)));
+				D = xval / NN;
+				//计算经度(Longitude) 纬度(Latitude)  
+				longitude1 = longitude0 + (D - (1 + 2 * T + C) * D * D * D / 6 + (5 - 2 * C + 28 * T - 3 * C * C + 8 * ee + 24 * T * T) * D *
+					D * D * D * D / 120) / Math.cos(fai);
+				latitude1 = fai - (NN * Math.tan(fai) / R) * (D * D / 2 - (5 + 3 * T + 10 * C - 4 * C * C - 9 * ee) * D * D * D * D / 24 +
+					(61 + 90 * T + 298 * C + 45 * T * T - 256 * ee - 3 * C * C) * D * D * D * D * D * D / 720);
+				//转换为度 DD  
+				longitude = longitude1 / iPI;
+				latitude = latitude1 / iPI;
+				alert("正算结果:\n\n经度: " + longitude + ", 纬度: " + latitude);
+			}
+		}
+
+		////高斯反算
+		function GaussProjCalFan() {
+			var longitude = document.getElementById("long").value; //int
+			var latitude = document.getElementById("lat").value; //int
+			var Dai = document.getElementById("dai2").value; //int
+			if(longitude == null || longitude == 0 || latitude == null || latitude == 0 || Dai == null || Dai == 0) {
+				alert("请输入经纬度和带宽!");
+			} else {
+				var X; //double
+				var Y; //double
+				var ProjNo = 0; //int
+				var ZoneWide; //// int 带宽   
+				var longitude1, latitude1, longitude0, latitude0, X0, Y0, xval, yval; //double
+				var a, f, e2, ee, NN, T, C, A, M, iPI; // double
+				iPI = 0.0174532925199433; ////3.1415926535898/180.0;   
+				ZoneWide = Dai; ////6度带宽   
+				a = 6378245.0;
+				f = 1.0 / 298.3; //54年北京坐标系参数   
+				////a=6378140.0; f=1/298.257; //80年西安坐标系参数   
+				ProjNo = parseInt(longitude / ZoneWide);
+				longitude0 = ProjNo * ZoneWide + ZoneWide / 2;
+				longitude0 = longitude0 * iPI;
+				latitude0 = 0;
+				longitude1 = longitude * iPI; //经度转换为弧度  
+				latitude1 = latitude * iPI; //纬度转换为弧度  
+				e2 = 2 * f - f * f;
+				ee = e2 * (1.0 - e2);
+				NN = a / Math.sqrt(1.0 - e2 * Math.sin(latitude1) * Math.sin(latitude1));
+				T = Math.tan(latitude1) * Math.tan(latitude1);
+				C = ee * Math.cos(latitude1) * Math.cos(latitude1);
+				A = (longitude1 - longitude0) * Math.cos(latitude1);
+				M = a * ((1 - e2 / 4 - 3 * e2 * e2 / 64 - 5 * e2 * e2 * e2 / 256) * latitude1 - (3 * e2 / 8 + 3 * e2 * e2 / 32 + 45 * e2 * e2 * e2 / 1024) * Math.sin(2 * latitude1) + (15 * e2 * e2 / 256 + 45 * e2 * e2 * e2 / 1024) * Math.sin(4 * latitude1) - (35 * e2 * e2 * e2 / 3072) * Math.sin(6 * latitude1));
+				xval = NN * (A + (1 - T + C) * A * A * A / 6 + (5 - 18 * T + T * T + 72 * C - 58 * ee) * A * A * A * A * A / 120);
+				yval = M + NN * Math.tan(latitude1) * (A * A / 2 + (5 - T + 9 * C + 4 * C * C) * A * A * A * A / 24 +
+					(61 - 58 * T + T * T + 600 * C - 330 * ee) * A * A * A * A * A * A / 720);
+				X0 = 1000000 * (ProjNo + 1) + 500000;
+				Y0 = 0;
+				xval = xval + X0;
+				yval = yval + Y0;
+				X = xval;
+				Y = yval;
+				alert("反算结果:\n\nX: " + X + ", Y: " + Y + "\n\n(精度: 0.001m)");
+			}
+		}
+	</script>
+
+</html>
